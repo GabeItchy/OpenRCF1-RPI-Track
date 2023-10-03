@@ -1,7 +1,7 @@
 import pygame
 import RPi.GPIO as GPIO
-import requests
-import socket
+# import requests
+# import socket
 
 """""""""
 # Relays server position to pi 4 server

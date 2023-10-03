@@ -1,5 +1,6 @@
 import pygame
 import RPi.GPIO as GPIO
+import requests
 
 # Initialize Pygame
 pygame.init()

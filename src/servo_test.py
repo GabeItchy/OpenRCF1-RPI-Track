@@ -1,6 +1,7 @@
 import pygame
 import pigpio
-import time  # Import the time module
+import time  
+import requests
 
 # Initialize Pygame
 pygame.init()

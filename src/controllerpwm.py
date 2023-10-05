@@ -1,6 +1,27 @@
 import pygame
 import RPi.GPIO as GPIO
+# import requests
+# import socket
 
+"""""""""
+# Relays server position to pi 4 server
+# TODO: Start Pi 4 server and add server information
+# IP and port of the Raspberry Pi 4 server
+server_ip = 'your_pi_4_ip_address'
+server_port = 5000
+
+# Function to send servo position data to the server
+def send_servo_position(position):
+    data = {"servo_position": position}
+    try:
+        response = requests.post(f'http://{server_ip}:{server_port}/update_servo', json=data)
+        if response.status_code == 200:
+            print("Servo position sent successfully")
+        else:
+            print("Error sending servo position")
+    except Exception as e:
+        print(f"Error: {e}")
+"""""""""
 # Initialize Pygame
 pygame.init()
 

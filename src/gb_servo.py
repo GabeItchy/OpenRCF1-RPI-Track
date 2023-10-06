@@ -1,71 +1,57 @@
 import pygame
 import pigpio
-import time  
-import requests
+import time
 
-# Initialize Pygame
+# Initialize pygame and the controller
 pygame.init()
-
-# Initialize the joystick subsystem
 pygame.joystick.init()
 
-# Check if any joystick (including the PS4 controller) is connected
-if pygame.joystick.get_count() == 0:
-    print("No joystick found. Make sure your PS4 controller is connected.")
-else:
-    # Initialize the first joystick (change index if you have multiple controllers)
-    joystick = pygame.joystick.Joystick(0)
-    joystick.init()
+# Connect to the pigpio daemon
+pi = pigpio.pi()
 
-    # Define the index for the PS4 controller's left joystick's X-axis
-    LEFT_JOYSTICK_X_AXIS = 0  # This index may vary on different controllers
+# Initialize the servo GPIO pin (change this to your GPIO pin)
+servo_gpio_pin = 12
+pi.set_mode(servo_gpio_pin, pigpio.OUTPUT)
 
-    # Define the PWM pin for controlling the servo (GPIO 12)
-    SERVO_PIN = 12  # Change this to GPIO 12
+# Configure the servo parameters (pulsewidth range for your servo)
+servo_min = 1000  # Minimum pulsewidth (Far Left)
+servo_middle = 1500  # Middle pulsewidth (Middle)
+servo_max = 2000  # Maximum pulsewidth (Far Right)
 
-    # Create a pigpio instance
-    pi = pigpio.pi()
+# Initialize the controller
+joystick = pygame.joystick.Joystick(0)
+joystick.init()
 
-    # Define servo position limits
-    MIN_SERVO_POSITION = 700
-    MAX_SERVO_POSITION = 2000
+current_position = servo_middle  # Start in the Middle position
 
-    # Set a lower PWM frequency (e.g., 50 Hz for smoother motion)
-    pi.set_PWM_frequency(SERVO_PIN, 50)
+try:
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.JOYBUTTONDOWN:
+                if event.button == 2:  # Triangle button pressed (Upshifting)
+                    # Upshift to the next position
+                    if current_position == servo_middle:
+                        current_position = servo_min  # Upshift from Neutral to gear_1
+                    elif current_position == servo_min:
+                        current_position = servo_max  # Upshift from gear_1 to gear_2
 
-    try:
-        while True:
-            pygame.event.pump()
+                elif event.button == 0:  # X button pressed (Downshifting)
+                    # Downshift to the next position
+                    if current_position == servo_max:
+                        current_position = servo_min  # Downshift to gear_1 from gear_2 
+                    elif current_position == servo_min:
+                        current_position = servo_middle  # Downshift to neutral from gear_1
 
-            # Get the value of the left joystick's X-axis (-1.0 to 1.0, 0.0 is centered)
-            left_joystick_x = joystick.get_axis(LEFT_JOYSTICK_X_AXIS)
+                # Set the servo position
+                pi.set_servo_pulsewidth(servo_gpio_pin, current_position)
 
-            # Invert the joystick value
-            inverted_joystick_x = -left_joystick_x
+        print(f"Current Gear Position: {'gear_1' if current_position == servo_min else ('gear_n' if current_position == servo_middle else 'gear_2')}")
+        time.sleep(0.01)  # Add a small delay to avoid excessive updates
 
-            # Map the inverted joystick value to servo position
-            servo_position = int(
-                (inverted_joystick_x + 1) * (MAX_SERVO_POSITION - MIN_SERVO_POSITION) / 2 + MIN_SERVO_POSITION
-            )
+except KeyboardInterrupt:
+    pass
 
-            # Ensure the servo position is within the valid range
-            servo_position = max(MIN_SERVO_POSITION, min(MAX_SERVO_POSITION, servo_position))
-
-            # Set the servo position
-            pi.set_servo_pulsewidth(SERVO_PIN, servo_position)
-
-            # Print the servo position
-            print(f"Servo Position: {servo_position} microseconds")
-
-            # Check if the joystick is at rest (close to zero)
-            if abs(inverted_joystick_x) < 0.1:
-                # Return the servo to the middle point (position 1700)
-                pi.set_servo_pulsewidth(SERVO_PIN, 1300)
-
-            # Add a small sleep interval (e.g., 0.01 seconds) for smoother PWM signal
-            time.sleep(0.01)
-
-    except KeyboardInterrupt:
-        # Clean up and exit when Ctrl+C is pressed
-        pi.set_servo_pulsewidth(SERVO_PIN, 0)  # Stop the servo
-        pi.stop()
+# Clean up
+pi.set_servo_pulsewidth(servo_gpio_pin, 0)
+pi.stop()
+pygame.quit()

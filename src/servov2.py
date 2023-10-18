@@ -13,7 +13,7 @@ server_port = 80
 
 # Function to send servo position data to the server
 def send_servo_position(position):
-    data = {"servo_position": position}
+    data = {"servo_position": pulse_width}
     try:
         response = requests.post(f'http://{server_ip}:{server_port}/update_servo', json=data)
         if response.status_code == 200:

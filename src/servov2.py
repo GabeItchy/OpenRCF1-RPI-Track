@@ -1,6 +1,28 @@
 import pigpio
 import pygame
 import time
+import requests
+import socket
+
+
+# Relays server position to pi 4 server
+# TODO: Setup static ip on raspberry pi 4 and find which network to run on. Possible portforward.
+# IP and port of the Raspberry Pi 4 server
+server_ip = '172.20.10.3'
+server_port = 80
+
+# Function to send servo position data to the server
+def send_servo_position(position):
+    data = {"servo_position": position}
+    try:
+        response = requests.post(f'http://{server_ip}:{server_port}/update_servo', json=data)
+        if response.status_code == 200:
+            print("Servo position sent successfully")
+        else:
+            print("Error sending servo position")
+    except Exception as e:
+        print(f"Error: {e}")
+
 
 # Servo Configuration
 servo_gpio_pin = 12

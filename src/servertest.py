@@ -2,7 +2,7 @@ import requests
 import json
 
 # NGINX server URL where your PHP script is hosted
-nginx_server_url = "http://your_server_domain_or_ip/update_servo.php"
+nginx_server_url = "http://172.20.10.3/update_servo.php"
 
 # Sample JSON data to send
 data = {"servo_position": 90}
